@@ -30,12 +30,12 @@
             position: fixed; inset: 0;
             display: flex; align-items: center; justify-content: center;
             background: white; z-index: 9999;
+            transition: opacity 0.5s ease;
         }
         .dark #loading { background: #131314; color: white; }
 
         #sidebar { transition: transform 0.3s ease, background-color 0.3s ease; }
 
-        /* Code Blocks Styling */
         .prose pre {
             background-color: #18181b;
             padding: 1rem; border-radius: 0.5rem; overflow-x: auto;
@@ -51,17 +51,24 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        /* Message Bubble Transitions */
         .message-fade { animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Colorful Gradient Text for Blixa */
+        .blixa-gradient {
+            background: linear-gradient(to right, #3b82f6, #a855f7, #f43f5e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
 
     <div id="loading">
         <div class="flex flex-col items-center gap-4">
-            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-            <p class="font-medium">Initializing Blixa...</p>
+            <img src="blixa.png" class="w-16 h-16 animate-bounce" alt="Loading...">
+            <p class="font-bold blixa-gradient text-xl">Initializing Blixa...</p>
         </div>
     </div>
 
@@ -69,7 +76,10 @@
         <button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition">
             <i data-lucide="menu"></i>
         </button>
-        <span class="font-semibold text-lg">Blixa</span>
+        <div class="flex items-center gap-2">
+            <img src="blixa.png" class="w-8 h-8" alt="Logo">
+            <span class="blixa-gradient text-xl">Blixa</span>
+        </div>
         <button onclick="newChat()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg text-blue-500 transition">
             <i data-lucide="plus"></i>
         </button>
@@ -77,8 +87,9 @@
 
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-gray-50 dark:bg-[#1e1e20] border-r border-gray-200 dark:border-zinc-800 transform -translate-x-full md:translate-x-0 md:relative flex flex-col h-full">
         <div class="p-4 flex items-center justify-between">
-            <div class="flex items-center gap-2 font-bold text-xl px-2">
-                <span class="text-blue-500 text-2xl">✦</span> Blixa
+            <div class="flex items-center gap-2 px-2">
+                <img src="blixa.png" class="w-8 h-8" alt="Logo">
+                <span class="blixa-gradient text-2xl">Blixa</span>
             </div>
             <button onclick="toggleSidebar()" class="md:hidden p-2"><i data-lucide="x"></i></button>
         </div>
@@ -102,10 +113,10 @@
     <main class="flex-1 flex flex-col relative min-w-0 h-full bg-white dark:bg-[#131314] transition-colors">
         <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-40 no-scrollbar">
             <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center py-20">
-                <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20">
-                    <span class="text-white text-3xl font-bold">✦</span>
+                <div class="mb-6">
+                    <img src="blixa.png" class="w-24 h-24" alt="Blixa Welcome">
                 </div>
-                <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-red-400 bg-clip-text text-transparent mb-4">Hello, I'm Blixa</h1>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Hello, I'm <span class="blixa-gradient">Blixa</span></h1>
                 <p class="text-gray-500 dark:text-zinc-400 text-lg">Your personal AI assistant. How can I help today?</p>
             </div>
         </div>
@@ -183,21 +194,27 @@
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (state.isDarkMode) document.documentElement.classList.add('dark');
-            elements.apiKeyInput.value = state.apiKey;
-            elements.modelInput.value = state.model;
-            elements.sysInput.value = state.systemPrompt;
-            renderChatList();
-            updateThemeUI();
-            lucide.createIcons();
+            try {
+                if (state.isDarkMode) document.documentElement.classList.add('dark');
+                elements.apiKeyInput.value = state.apiKey;
+                elements.modelInput.value = state.model;
+                elements.sysInput.value = state.systemPrompt;
+                renderChatList();
+                updateThemeUI();
+                lucide.createIcons();
+                
+                elements.userInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                    elements.sendBtn.disabled = !this.value.trim();
+                });
+            } catch (e) { console.error("Init Error:", e); }
             
-            elements.userInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-                elements.sendBtn.disabled = !this.value.trim();
-            });
-
-            setTimeout(() => elements.loading.style.display = 'none', 600);
+            // Fixed loading screen logic
+            setTimeout(() => {
+                elements.loading.style.opacity = '0';
+                setTimeout(() => elements.loading.style.display = 'none', 500);
+            }, 1000);
         });
 
         function toggleSidebar() {
@@ -216,9 +233,11 @@
         function updateThemeUI() {
             const icon = document.getElementById('dark-icon');
             const text = document.getElementById('dark-text');
-            icon.setAttribute('data-lucide', state.isDarkMode ? 'sun' : 'moon');
-            text.innerText = state.isDarkMode ? 'Light Mode' : 'Dark Mode';
-            lucide.createIcons();
+            if(icon) {
+                icon.setAttribute('data-lucide', state.isDarkMode ? 'sun' : 'moon');
+                text.innerText = state.isDarkMode ? 'Light Mode' : 'Dark Mode';
+                lucide.createIcons();
+            }
         }
 
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
@@ -244,7 +263,7 @@
             elements.chatContainer.appendChild(elements.welcomeView);
             elements.welcomeView.classList.remove('hidden');
             renderChatList();
-            if(window.innerWidth < 768) toggleSidebar();
+            if(window.innerWidth < 768 && state.isSidebarOpen) toggleSidebar();
         }
 
         function renderChatList() {
@@ -360,21 +379,11 @@
 
             wrapper.innerHTML = `
                 <div class="flex gap-3 max-w-[85%] md:max-w-[75%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start">
-                    <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black border-2 ${isUser ? 'bg-blue-600 border-blue-400 text-white' : 'bg-purple-600 border-purple-400 text-white'}">
-                        ${isUser ? 'YOU' : 'BX'}
+                    <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                        ${isUser 
+                            ? '<div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-black text-white">YOU</div>' 
+                            : '<img src="blixa.png" class="w-8 h-8 object-contain" alt="BX">'
+                        }
                     </div>
                     <div class="px-4 py-3 ${bgClass}">
-                        <div id="${id}" class="prose dark:prose-invert prose-sm md:prose-base transition-colors overflow-hidden">
-                            ${marked.parse(content || '')}
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            elements.chatContainer.appendChild(wrapper);
-            elements.chatContainer.scrollTo({ top: elements.chatContainer.scrollHeight, behavior: 'smooth' });
-            return id;
-        }
-    </script>
-</body>
-</html>
+                        
