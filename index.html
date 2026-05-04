@@ -9,7 +9,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <script>
-        // Tailwind configuration for Dark Mode support
         tailwind.config = {
             darkMode: 'class',
         }
@@ -24,7 +23,6 @@
             transition: background-color 0.3s ease;
         }
         
-        /* Unified Background Colors */
         body { background-color: #ffffff; color: #1f2937; }
         .dark body { background-color: #131314; color: #e3e3e3; }
 
@@ -37,23 +35,25 @@
 
         #sidebar { transition: transform 0.3s ease, background-color 0.3s ease; }
 
-        /* Code Blocks */
+        /* Code Blocks Styling */
         .prose pre {
-            background-color: #f1f5f9;
+            background-color: #18181b;
             padding: 1rem; border-radius: 0.5rem; overflow-x: auto;
+            color: #f4f4f5;
         }
-        .dark .prose pre { background-color: #1e1e20; }
         
-        /* Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Blinking Cursor */
         .typing::after {
             content: "●"; animation: blink 1s infinite;
             margin-left: 4px; color: #4285f4;
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Message Bubble Transitions */
+        .message-fade { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
@@ -66,11 +66,11 @@
     </div>
 
     <header class="md:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-800 sticky top-0 bg-white dark:bg-[#131314] z-40">
-        <button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg">
+        <button onclick="toggleSidebar()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition">
             <i data-lucide="menu"></i>
         </button>
         <span class="font-semibold text-lg">Blixa</span>
-        <button onclick="newChat()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg text-blue-500">
+        <button onclick="newChat()" class="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg text-blue-500 transition">
             <i data-lucide="plus"></i>
         </button>
     </header>
@@ -87,8 +87,7 @@
             <i data-lucide="plus" class="w-4 h-4"></i> New Chat
         </button>
 
-        <div id="chat-list" class="flex-1 overflow-y-auto px-2 mt-4 space-y-1 no-scrollbar text-gray-700 dark:text-zinc-300">
-            </div>
+        <div id="chat-list" class="flex-1 overflow-y-auto px-2 mt-4 space-y-1 no-scrollbar text-gray-700 dark:text-zinc-300"></div>
 
         <div class="p-4 border-t border-gray-200 dark:border-zinc-800 space-y-2">
             <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg text-sm transition">
@@ -100,26 +99,27 @@
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative min-w-0 h-full bg-white dark:bg-[#131314]">
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pb-40 no-scrollbar">
+    <main class="flex-1 flex flex-col relative min-w-0 h-full bg-white dark:bg-[#131314] transition-colors">
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-40 no-scrollbar">
             <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center py-20">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20">
+                    <span class="text-white text-3xl font-bold">✦</span>
+                </div>
                 <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-red-400 bg-clip-text text-transparent mb-4">Hello, I'm Blixa</h1>
-                <p class="text-gray-500 dark:text-zinc-400 text-lg">How can I help you today?</p>
+                <p class="text-gray-500 dark:text-zinc-400 text-lg">Your personal AI assistant. How can I help today?</p>
             </div>
         </div>
 
         <div class="fixed bottom-0 left-0 right-0 md:left-72 bg-gradient-to-t from-white dark:from-[#131314] via-white dark:via-[#131314] to-transparent pt-10 pb-6 px-4">
             <div class="max-w-3xl mx-auto relative group">
-                <div class="bg-gray-100 dark:bg-zinc-800 rounded-3xl p-2 flex flex-col shadow-sm focus-within:shadow-md transition-colors duration-300">
+                <div class="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-3xl p-2 flex flex-col shadow-sm focus-within:shadow-md transition-all duration-300">
                     <textarea id="user-input" rows="1" placeholder="Enter a prompt here" 
                         class="w-full bg-transparent p-3 outline-none resize-none max-h-48 text-base md:text-lg text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-zinc-500"></textarea>
                     <div class="flex justify-between items-center px-2 pb-1">
-                        <div class="flex gap-1">
-                             <button onclick="openModal('sys-modal')" class="p-2 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-full text-zinc-500 transition">
-                                <i data-lucide="bot" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                        <button id="send-btn" onclick="handleSend()" class="p-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-30 disabled:bg-zinc-500 text-white rounded-full transition" disabled>
+                        <button onclick="openModal('sys-modal')" class="p-2 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-full text-zinc-500 transition">
+                            <i data-lucide="bot" class="w-5 h-5"></i>
+                        </button>
+                        <button id="send-btn" onclick="handleSend()" class="p-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-30 disabled:bg-zinc-500 text-white rounded-full transition shadow-md" disabled>
                             <i data-lucide="arrow-up" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -128,7 +128,7 @@
         </div>
     </main>
 
-    <div id="settings-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div id="settings-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-gray-100 dark:border-zinc-800">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold dark:text-white">Settings</h2>
@@ -148,7 +148,7 @@
         </div>
     </div>
 
-    <div id="sys-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 p-4">
+    <div id="sys-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/60 p-4">
         <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl p-6 border border-gray-100 dark:border-zinc-800">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold dark:text-white">System Prompt</h2>
@@ -160,12 +160,9 @@
     </div>
 
     <script>
-        /**
-         * BLIXA CORE JS
-         */
         let state = {
             apiKey: localStorage.getItem('blixa_key') || '',
-            model: localStorage.getItem('blixa_model') || 'deepseek/deepseek-r1:free',
+            model: localStorage.getItem('blixa_model') || 'google/gemini-2.0-flash-001',
             systemPrompt: localStorage.getItem('blixa_sys') || 'You are Blixa, a helpful AI assistant.',
             chats: JSON.parse(localStorage.getItem('blixa_chats')) || [],
             currentChatId: null,
@@ -200,7 +197,7 @@
                 elements.sendBtn.disabled = !this.value.trim();
             });
 
-            setTimeout(() => elements.loading.style.display = 'none', 500);
+            setTimeout(() => elements.loading.style.display = 'none', 600);
         });
 
         function toggleSidebar() {
@@ -229,7 +226,7 @@
 
         function saveSettings() {
             state.apiKey = elements.apiKeyInput.value.trim();
-            state.model = elements.modelInput.value.trim() || 'deepseek/deepseek-r1:free';
+            state.model = elements.modelInput.value.trim() || 'google/gemini-2.0-flash-001';
             localStorage.setItem('blixa_key', state.apiKey);
             localStorage.setItem('blixa_model', state.model);
             closeModal('settings-modal');
@@ -247,6 +244,7 @@
             elements.chatContainer.appendChild(elements.welcomeView);
             elements.welcomeView.classList.remove('hidden');
             renderChatList();
+            if(window.innerWidth < 768) toggleSidebar();
         }
 
         function renderChatList() {
@@ -254,11 +252,11 @@
             state.chats.slice().reverse().forEach(chat => {
                 const isActive = chat.id === state.currentChatId;
                 const div = document.createElement('div');
-                div.className = `group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition ${isActive ? 'bg-gray-200 dark:bg-zinc-800' : 'hover:bg-gray-200 dark:hover:bg-zinc-800/50'}`;
+                div.className = `group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition ${isActive ? 'bg-gray-200 dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'hover:bg-gray-200 dark:hover:bg-zinc-800/50'}`;
                 div.onclick = () => loadChat(chat.id);
                 div.innerHTML = `
                     <i data-lucide="message-square" class="w-4 h-4 flex-shrink-0"></i>
-                    <span class="truncate flex-1 text-sm">${chat.title}</span>
+                    <span class="truncate flex-1 text-sm font-medium">${chat.title}</span>
                     <button onclick="deleteChat(event, ${chat.id})" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition">
                         <i data-lucide="trash-2" class="w-3 h-3"></i>
                     </button>
@@ -275,6 +273,7 @@
             elements.chatContainer.innerHTML = '';
             chat.messages.forEach(msg => appendMessageUI(msg.role, msg.content));
             renderChatList();
+            if(window.innerWidth < 768 && state.isSidebarOpen) toggleSidebar();
         }
 
         function deleteChat(e, id) {
@@ -343,8 +342,9 @@
                 aiContainer.classList.remove('typing');
                 currentChat.messages.push({ role: 'assistant', content: fullResponse });
                 localStorage.setItem('blixa_chats', JSON.stringify(state.chats));
+                renderChatList();
             } catch (err) {
-                aiContainer.innerHTML = "Error fetching response.";
+                aiContainer.innerHTML = "<span class='text-red-500'>Connection Error. Check API Key.</span>";
             }
         }
 
@@ -352,19 +352,27 @@
             const id = 'msg-' + Date.now();
             const isUser = role === 'user';
             const wrapper = document.createElement('div');
-            wrapper.className = `flex ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-300`;
+            wrapper.className = `flex ${isUser ? 'justify-end' : 'justify-start'} message-fade`;
+
+            const bgClass = isUser 
+                ? 'bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 rounded-2xl rounded-tr-none shadow-sm' 
+                : 'bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 text-gray-800 dark:text-zinc-200 rounded-2xl rounded-tl-none shadow-sm';
+
             wrapper.innerHTML = `
-                <div class="flex gap-4 max-w-[90%] md:max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}">
-                    <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${isUser ? 'bg-blue-600 text-white' : 'bg-purple-500 text-white'}">
-                        ${isUser ? 'U' : 'B'}
+                <div class="flex gap-3 max-w-[85%] md:max-w-[75%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start">
+                    <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black border-2 ${isUser ? 'bg-blue-600 border-blue-400 text-white' : 'bg-purple-600 border-purple-400 text-white'}">
+                        ${isUser ? 'YOU' : 'BX'}
                     </div>
-                    <div id="${id}" class="prose dark:prose-invert prose-sm md:prose-base transition-colors">
-                        ${marked.parse(content)}
+                    <div class="px-4 py-3 ${bgClass}">
+                        <div id="${id}" class="prose dark:prose-invert prose-sm md:prose-base transition-colors overflow-hidden">
+                            ${marked.parse(content || '')}
+                        </div>
                     </div>
                 </div>
             `;
+            
             elements.chatContainer.appendChild(wrapper);
-            elements.chatContainer.scrollTo(0, elements.chatContainer.scrollHeight);
+            elements.chatContainer.scrollTo({ top: elements.chatContainer.scrollHeight, behavior: 'smooth' });
             return id;
         }
     </script>
