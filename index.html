@@ -31,15 +31,15 @@
         .dark ::-webkit-scrollbar-thumb { background: #27272a; }
 
         body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.3s ease; }
+        
         .blixa-gradient-text { background: linear-gradient(135deg, #ff0000, #ffea00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .full-gradient { background: linear-gradient(to right, #0ea5e9, #a855f7, #f43f5e, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
 
-        .dark .glass-card { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0, 0, 0, 0.05); }
+        .dark .glass-card { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
 
         #blixa-terminal { font-family: 'JetBrains Mono', monospace; font-size: 11px; transition: all 0.5s ease; }
         .terminal-line { margin-bottom: 2px; color: #10b981; }
-
         .bubble { max-width: 85%; padding: 1.25rem; border-radius: 24px; position: relative; }
         .bubble-user { background: #ec4899; color: white; border-bottom-right-radius: 4px; }
         .bubble-ai { background: white; border: 1px solid #e2e8f0; border-bottom-left-radius: 4px; }
@@ -47,9 +47,40 @@
 
         .status-pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: blink 1.5s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .chat-item .delete-btn { opacity: 0; transition: all 0.2s; }
+        .chat-item:hover .delete-btn { opacity: 1; }
+
+        /* Dark Mode Text Fix */
+        .dark .text-zinc-900, .dark .text-zinc-800, .dark .text-zinc-600 { color: #f4f4f5 !important; }
+        .dark .text-zinc-500, .dark .text-zinc-400 { color: #a1a1aa !important; }
+        .dark .prose { color: #f4f4f5 !important; }
+
+        @keyframes wave {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.5); opacity: 0.2; }
+        }
+        .voice-wave { animation: wave 2s infinite ease-in-out; }
     </style>
 </head>
-<body class="flex h-screen bg-surface-50 dark:bg-surface-950 overflow-hidden">
+<body class="flex h-screen bg-surface-50 dark:bg-surface-950 overflow-hidden text-zinc-900 dark:text-white">
+
+    <div id="voice-overlay" class="fixed inset-0 z-[300] hidden bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center text-white">
+        <div class="relative flex items-center justify-center mb-20">
+            <div class="absolute w-40 h-40 bg-brand-500/30 rounded-full voice-wave"></div>
+            <div class="absolute w-56 h-56 bg-brand-500/10 rounded-full voice-wave" style="animation-delay: 0.5s"></div>
+            <div class="z-10 w-24 h-24 bg-brand-500 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(236,72,153,0.5)]">
+                <i data-lucide="mic" id="voice-mic-icon" class="w-10 h-10 text-white animate-pulse"></i>
+            </div>
+        </div>
+        <div class="text-center px-10">
+            <h2 id="voice-status" class="text-2xl font-black uppercase tracking-widest mb-4 blixa-gradient-text">Listening...</h2>
+            <p id="voice-transcript" class="text-zinc-400 text-lg italic max-w-md min-h-[3rem]">"Say something..."</p>
+        </div>
+        <button onclick="stopVoiceMode()" class="absolute bottom-16 p-6 bg-red-500 hover:bg-red-600 rounded-full shadow-2xl transition-transform active:scale-90">
+            <i data-lucide="phone-off" class="w-8 h-8 text-white"></i>
+        </button>
+    </div>
 
     <div id="loader" class="fixed inset-0 z-[999] bg-white dark:bg-surface-950 flex flex-col items-center justify-center">
         <div class="relative flex items-center justify-center">
@@ -76,34 +107,34 @@
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-80 glass-card border-r transform -translate-x-full lg:translate-x-0 lg:relative transition-transform duration-500 flex flex-col">
         <div class="p-6">
             <div class="flex items-center justify-between mb-10">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-orange-400 flex items-center justify-center shadow-lg">
-                        <img src="blixa.png" class="w-8 h-8 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
-                    </div>
-                    <span class="blixa-gradient-text text-2xl font-black">Blixa</span>
+                <div class="flex items-center gap-2">
+                    <img src="blixa.png" class="w-7 h-7 rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
+                    <span class="text-lg font-black tracking-tight text-zinc-900 dark:text-white uppercase">BLIXA <span class="text-brand-500">CORE</span></span>
                 </div>
-                <button onclick="toggleSidebar()" class="lg:hidden p-2"><i data-lucide="x"></i></button>
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><i data-lucide="x"></i></button>
             </div>
             <button onclick="newChat()" class="w-full flex items-center justify-center gap-3 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold shadow-xl active:scale-95 mb-8">
                 <i data-lucide="sparkles" class="w-5 h-5"></i> New Intelligence
             </button>
         </div>
-        <div id="chat-list" class="flex-1 overflow-y-auto px-4 space-y-3 no-scrollbar"></div>
+        
+        <div id="chat-list" class="flex-1 overflow-y-auto px-4 space-y-2 no-scrollbar"></div>
+        
         <div class="p-4 border-t border-zinc-200 dark:border-zinc-800">
             <div class="flex items-center gap-3 p-4 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-2xl">
                 <img id="user-avatar-preview" src="https://ui-avatars.com/api/?name=User" class="w-11 h-11 rounded-full border-2 border-brand-500">
                 <div class="flex-1">
-                    <p class="text-xs font-black truncate uppercase">Operator 01</p>
+                    <p class="text-xs font-black truncate uppercase text-zinc-900 dark:text-white">Operator 01</p>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-2 mt-4">
-                <button onclick="toggleDarkMode()" class="p-3 flex flex-col items-center gap-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition">
+                <button onclick="toggleDarkMode()" class="p-3 flex flex-col items-center gap-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition text-zinc-600 dark:text-zinc-400">
                     <i data-lucide="sun" class="w-4 h-4 text-orange-400 dark:hidden"></i>
                     <i data-lucide="moon" class="w-4 h-4 text-brand-500 hidden dark:block"></i>
                     <span class="text-[9px] font-black">THEME</span>
                 </button>
-                <button onclick="openModal('settings-modal')" class="p-3 flex flex-col items-center gap-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition">
-                    <i data-lucide="settings" class="w-4 h-4 text-zinc-400"></i>
+                <button onclick="openModal('settings-modal')" class="p-3 flex flex-col items-center gap-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition text-zinc-600 dark:text-zinc-400">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
                     <span class="text-[9px] font-black">CORE</span>
                 </button>
             </div>
@@ -113,7 +144,7 @@
     <main class="flex-1 flex flex-col relative overflow-hidden">
         <header class="flex items-center justify-between p-4 md:px-8 glass-card border-b z-40">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl"><i data-lucide="menu"></i></button>
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-600 dark:text-white"><i data-lucide="menu"></i></button>
                 <div class="flex items-center gap-2">
                     <img src="blixa.png" class="w-7 h-7 rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
                     <span class="text-lg font-black tracking-tight text-zinc-900 dark:text-white">BLIXA <span class="text-brand-500">CORE</span></span>
@@ -127,10 +158,12 @@
 
         <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-12 space-y-12 pb-44 no-scrollbar">
             <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center py-20">
-                <div class="w-28 h-28 bg-brand-500 rounded-[35px] flex items-center justify-center shadow-2xl mb-12 rotate-6">
-                    <img src="blixa.png" class="w-16 h-16" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
+                <div class="w-36 h-36 border-4 border-brand-500 bg-white rounded-full flex items-center justify-center shadow-2xl mb-12 rotate-6">
+                    <img src="blixa.png" class="w-24 h-24 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
                 </div>
-                <h1 class="text-5xl md:text-8xl font-black mb-6 full-gradient tracking-tighter">Autonomous AI.</h1>
+                <h1 class="text-5xl md:text-8xl font-black mb-6 tracking-tighter">
+                    <span class="text-zinc-900 dark:text-white">BLIXA</span> <span class="text-brand-500">CORE</span>
+                </h1>
                 <p class="text-zinc-500 dark:text-zinc-400 text-lg max-w-2xl font-medium">System Version 2026.4. Self-healing logic active.</p>
             </div>
         </div>
@@ -141,8 +174,7 @@
                     <textarea id="user-input" rows="1" placeholder="Type command..." class="w-full bg-transparent px-5 py-3 outline-none resize-none text-zinc-800 dark:text-white max-h-48 text-base font-medium leading-normal" oninput="autoResize(this)"></textarea>
                     <div class="flex items-center justify-between px-4 pb-2.5">
                         <div class="flex gap-1.5">
-                            <button onclick="startVoiceMode()" class="p-2.5 text-zinc-400 hover:text-brand-500 hover:bg-brand-500/10 rounded-2xl transition-all"><i data-lucide="mic" class="w-5 h-5"></i></button>
-                            <label class="p-2.5 text-zinc-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-2xl cursor-pointer"><i data-lucide="paperclip" class="w-5 h-5"></i><input type="file" class="hidden"></label>
+                            <button onclick="startVoiceMode()" class="p-2.5 text-zinc-400 hover:text-brand-500 hover:bg-brand-500/10 rounded-2xl transition-all"><i data-lucide="mic" class="w-6 h-6"></i></button>
                         </div>
                         <button id="send-btn" onclick="handleSend()" class="p-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-20 text-white rounded-2xl shadow-xl transition-all active:scale-90" disabled><i data-lucide="navigation" class="w-5 h-5"></i></button>
                     </div>
@@ -154,9 +186,9 @@
     <div id="settings-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
         <div class="bg-white dark:bg-surface-900 w-full max-w-2xl rounded-[40px] overflow-hidden shadow-2xl flex flex-col md:flex-row">
             <div class="flex-1 p-10 space-y-8 text-zinc-900 dark:text-white">
-                <div class="flex justify-between items-center"><h2 class="text-3xl font-black">Core Config</h2><button onclick="closeModal('settings-modal')"><i data-lucide="x" class="w-6 h-6"></i></button></div>
-                <input type="password" id="api-key-input" placeholder="Neural Key" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none">
-                <input type="text" id="api-url-input" placeholder="Endpoint URL" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none">
+                <div class="flex justify-between items-center"><h2 class="text-3xl font-black">Core Config</h2><button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+                <input type="password" id="api-key-input" placeholder="Neural Key" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none text-zinc-900 dark:text-white">
+                <input type="text" id="api-url-input" placeholder="Endpoint URL" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none text-zinc-900 dark:text-white">
                 <button onclick="saveSettings()" class="w-full py-5 bg-brand-500 text-white font-black rounded-2xl">Synchronize</button>
             </div>
         </div>
@@ -170,7 +202,8 @@
             chats: JSON.parse(localStorage.getItem('blixa_chats')) || [],
             currentChatId: null,
             isDarkMode: localStorage.getItem('blixa_theme') === 'dark',
-            isTyping: false
+            isTyping: false,
+            voiceMode: false
         };
 
         const elements = {
@@ -179,8 +212,18 @@
             userInput: document.getElementById('user-input'),
             sendBtn: document.getElementById('send-btn'),
             welcomeView: document.getElementById('welcome-view'),
-            terminal: document.getElementById('terminal-content')
+            terminal: document.getElementById('terminal-content'),
+            voiceOverlay: document.getElementById('voice-overlay'),
+            voiceTranscript: document.getElementById('voice-transcript'),
+            voiceStatus: document.getElementById('voice-status')
         };
+
+        const recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : null;
+        if(recognition) {
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+        }
 
         window.onload = () => {
             lucide.createIcons();
@@ -191,10 +234,61 @@
             setTimeout(() => { document.getElementById('loader').remove(); }, 1000);
         };
 
+        function startVoiceMode() {
+            if (!recognition) return alert("Speech recognition not supported.");
+            state.voiceMode = true;
+            elements.voiceOverlay.classList.remove('hidden');
+            elements.voiceStatus.innerText = "Listening...";
+            elements.voiceTranscript.innerText = "Listening for commands...";
+            recognition.start();
+        }
+
+        function stopVoiceMode() {
+            state.voiceMode = false;
+            elements.voiceOverlay.classList.add('hidden');
+            recognition.stop();
+            window.speechSynthesis.cancel();
+        }
+
+        if(recognition) {
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                elements.voiceTranscript.innerText = text;
+                if (event.results[0].isFinal) {
+                    elements.voiceStatus.innerText = "Processing...";
+                    handleVoiceSend(text);
+                }
+            };
+            recognition.onend = () => { if(state.voiceMode && elements.voiceStatus.innerText === "Listening...") recognition.start(); };
+        }
+
+        async function handleVoiceSend(text) {
+            elements.userInput.value = text;
+            await handleSend();
+            const chat = state.chats.find(c => c.id === state.currentChatId);
+            if (!chat || chat.messages.length === 0) return;
+            const lastMessage = chat.messages[chat.messages.length - 1].content;
+            elements.voiceStatus.innerText = "Speaking...";
+            speakText(lastMessage);
+        }
+
+        function speakText(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.onend = () => {
+                if(state.voiceMode) {
+                    elements.voiceStatus.innerText = "Listening...";
+                    elements.voiceTranscript.innerText = "Waiting for you...";
+                    recognition.start();
+                }
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
         function toggleDarkMode() {
             state.isDarkMode = !state.isDarkMode;
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('blixa_theme', state.isDarkMode ? 'dark' : 'light');
+            lucide.createIcons();
         }
 
         function autoResize(textarea) {
@@ -207,6 +301,7 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function goHome() { location.reload(); }
+        function toggleTerminal() { document.getElementById('blixa-terminal').classList.toggle('translate-x-[200%]'); }
 
         function saveSettings() {
             state.apiBase = document.getElementById('api-url-input').value;
@@ -219,35 +314,67 @@
         function newChat() {
             state.currentChatId = null;
             elements.chatContainer.innerHTML = '';
-            elements.welcomeView.classList.add('hidden');
+            elements.welcomeView.classList.remove('hidden');
+            renderChatList();
         }
 
         function renderChatList() {
             elements.chatList.innerHTML = state.chats.slice().reverse().map(chat => `
-                <div class="p-4 rounded-2xl cursor-pointer ${state.currentChatId === chat.id ? 'bg-brand-500 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'}" onclick="loadChat(${chat.id})">
-                    <span class="truncate text-xs font-black uppercase tracking-tighter">${chat.title}</span>
+                <div class="chat-item group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all ${state.currentChatId === chat.id ? 'bg-brand-500 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'}">
+                    <div class="flex-1 truncate pr-6" onclick="loadChat(${chat.id})">
+                        <span class="text-[10px] font-black uppercase tracking-tighter">${chat.title}</span>
+                    </div>
+                    <button onclick="deleteChat(event, ${chat.id})" class="delete-btn absolute right-2 p-2 hover:bg-red-500/20 hover:text-red-500 rounded-xl transition-all">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
                 </div>
             `).join('');
             lucide.createIcons();
         }
 
+        function loadChat(id) {
+            state.currentChatId = id;
+            const chat = state.chats.find(c => c.id === id);
+            elements.chatContainer.innerHTML = '';
+            elements.welcomeView.classList.add('hidden');
+            chat.messages.forEach(msg => appendUI(msg.role, msg.content));
+            renderChatList();
+            if (window.innerWidth < 1024) toggleSidebar();
+        }
+
+        function deleteChat(event, id) {
+            event.stopPropagation();
+            if (confirm("Delete this session forever?")) {
+                state.chats = state.chats.filter(c => c.id !== id);
+                localStorage.setItem('blixa_chats', JSON.stringify(state.chats));
+                if (state.currentChatId === id) newChat();
+                else renderChatList();
+            }
+        }
+
         async function handleSend() {
             const val = elements.userInput.value.trim();
             if (!val || state.isTyping) return;
+            
             if (!state.currentChatId) {
                 state.currentChatId = Date.now();
-                state.chats.push({ id: state.currentChatId, title: val.substring(0, 20), messages: [] });
+                state.chats.push({ id: state.currentChatId, title: val.substring(0, 25), messages: [] });
                 elements.welcomeView.classList.add('hidden');
             }
+            
             const chat = state.chats.find(c => c.id === state.currentChatId);
             chat.messages.push({ role: 'user', content: val });
+            
             appendUI('user', val);
             elements.userInput.value = '';
             autoResize(elements.userInput);
+            
             state.isTyping = true;
-            const aiId = appendUI('assistant', 'Consulting Core...');
+            const aiId = appendUI('assistant', '...');
+            
             const reply = await callAPI(chat.messages);
             await typeWriter(aiId, reply);
+            
             chat.messages.push({ role: 'assistant', content: reply });
             localStorage.setItem('blixa_chats', JSON.stringify(state.chats));
             state.isTyping = false;
@@ -263,7 +390,7 @@
                 });
                 const data = await response.json();
                 return data.choices?.[0]?.message?.content || "Signal lost.";
-            } catch (e) { return "ERROR: Check connection."; }
+            } catch (e) { return "ERROR: Connection refused."; }
         }
 
         function appendUI(role, text) {
@@ -292,7 +419,6 @@
                 await new Promise(r => setTimeout(r, 15));
             }
         }
-        function toggleTerminal() { document.getElementById('blixa-terminal').classList.toggle('translate-x-[200%]'); }
     </script>
 </body>
 </html>
