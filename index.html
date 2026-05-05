@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blixa Quantum | Autonomous AI</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -30,11 +30,19 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark ::-webkit-scrollbar-thumb { background: #27272a; }
 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.3s ease; height: 100vh; height: -webkit-fill-available; display: flex; overflow: hidden; }
+        html, body { 
+            height: 100%; 
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .dark body { background-color: #09090b; }
         
         .blixa-gradient-text { background: linear-gradient(135deg, #ff0000, #ffea00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .full-gradient { background: linear-gradient(to right, #0ea5e9, #a855f7, #f43f5e, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
-
+        
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0, 0, 0, 0.05); }
         .dark .glass-card { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
 
@@ -48,148 +56,161 @@
         .status-pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: blink 1.5s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .chat-item .delete-btn { opacity: 0; transition: all 0.2s; }
-        .chat-item:hover .delete-btn { opacity: 1; }
-
         .dark .text-zinc-900, .dark .text-zinc-800, .dark .text-zinc-600 { color: #f4f4f5 !important; }
         .dark .text-zinc-500, .dark .text-zinc-400 { color: #a1a1aa !important; }
         .dark .prose { color: #f4f4f5 !important; }
+
+        /* Layout Fix for Mobile Browser */
+        .app-container {
+            display: flex;
+            height: 100dvh; /* Dynamic viewport height */
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 120px; /* Space for fixed input */
+        }
+
+        #input-wrapper {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, var(--bg-color) 80%, transparent);
+            z-index: 50;
+        }
+        .dark #input-wrapper { --bg-color: #09090b; }
+        #input-wrapper { --bg-color: #f8fafc; }
 
         @keyframes wave {
             0%, 100% { transform: scale(1); opacity: 0.5; }
             50% { transform: scale(1.5); opacity: 0.2; }
         }
         .voice-wave { animation: wave 2s infinite ease-in-out; }
-
-        /* Fixed Layout Fix */
-        #main-content { height: 100vh; height: -webkit-fill-available; display: flex; flex-direction: column; overflow: hidden; }
-        #input-wrapper { background: linear-gradient(to top, var(--bg-color) 40%, transparent); }
-        .dark #input-wrapper { --bg-color: #09090b; }
-        #input-wrapper { --bg-color: #f8fafc; }
     </style>
 </head>
 <body class="bg-surface-50 dark:bg-surface-950 text-zinc-900 dark:text-white">
 
-    <div id="voice-overlay" class="fixed inset-0 z-[300] hidden bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center text-white">
-        <div class="relative flex items-center justify-center mb-20">
-            <div class="absolute w-40 h-40 bg-brand-500/30 rounded-full voice-wave"></div>
-            <div class="absolute w-56 h-56 bg-brand-500/10 rounded-full voice-wave" style="animation-delay: 0.5s"></div>
-            <div class="z-10 w-24 h-24 bg-brand-500 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(236,72,153,0.5)]">
-                <i data-lucide="mic" id="voice-mic-icon" class="w-10 h-10 text-white animate-pulse"></i>
-            </div>
-        </div>
-        <div class="text-center px-10">
-            <h2 id="voice-status" class="text-2xl font-black uppercase tracking-widest mb-4 blixa-gradient-text">Listening...</h2>
-            <p id="voice-transcript" class="text-zinc-400 text-lg italic max-w-md min-h-[3rem]">"Say something..."</p>
-        </div>
-        <button onclick="stopVoiceMode()" class="absolute bottom-16 p-6 bg-red-500 hover:bg-red-600 rounded-full shadow-2xl transition-transform active:scale-90">
-            <i data-lucide="phone-off" class="w-8 h-8 text-white"></i>
-        </button>
-    </div>
-
-    <div id="loader" class="fixed inset-0 z-[999] bg-white dark:bg-surface-950 flex flex-col items-center justify-center">
-        <div class="relative flex items-center justify-center">
-            <div class="w-24 h-24 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-            <img src="blixa.png" class="absolute w-12 h-12 rounded-xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
-        </div>
-        <p class="mt-6 blixa-gradient-text text-xl font-black uppercase tracking-widest">Neural Link Connecting</p>
-    </div>
-
-    <div id="blixa-terminal" class="fixed bottom-32 right-6 z-50 w-72 h-48 bg-black/90 rounded-2xl border border-white/10 p-4 shadow-2xl translate-x-[200%] md:translate-x-0 hidden md:block">
-        <div class="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
-            <div class="flex items-center gap-2">
-                <div class="status-pulse"></div>
-                <span class="text-[10px] font-bold text-white uppercase tracking-tighter">System Terminal</span>
-            </div>
-            <button onclick="toggleTerminal()" class="text-zinc-500 hover:text-white"><i data-lucide="minus" class="w-3 h-3"></i></button>
-        </div>
-        <div id="terminal-content" class="h-32 overflow-y-auto no-scrollbar">
-            <div class="terminal-line">> Logic Gates: Active</div>
-            <div class="terminal-line">> System: Stable</div>
-        </div>
-    </div>
-
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-80 glass-card border-r transform -translate-x-full lg:translate-x-0 lg:relative transition-transform duration-500 flex flex-col">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-10">
-                <div class="flex items-center gap-2">
-                    <img src="blixa.png" class="w-7 h-7 rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
-                    <span class="text-lg font-black tracking-tight text-zinc-900 dark:text-white uppercase">BLIXA <span class="text-brand-500">CORE</span></span>
+    <div class="app-container">
+        <div id="voice-overlay" class="fixed inset-0 z-[300] hidden bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center text-white">
+            <div class="relative flex items-center justify-center mb-20">
+                <div class="absolute w-40 h-40 bg-brand-500/30 rounded-full voice-wave"></div>
+                <div class="absolute w-56 h-56 bg-brand-500/10 rounded-full voice-wave" style="animation-delay: 0.5s"></div>
+                <div class="z-10 w-24 h-24 bg-brand-500 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(236,72,153,0.5)]">
+                    <i data-lucide="mic" id="voice-mic-icon" class="w-10 h-10 text-white animate-pulse"></i>
                 </div>
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><i data-lucide="x"></i></button>
             </div>
-            <button onclick="newChat()" class="w-full flex items-center justify-center gap-3 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold shadow-xl active:scale-95 mb-8">
-                <i data-lucide="sparkles" class="w-5 h-5"></i> New Intelligence
+            <div class="text-center px-10">
+                <h2 id="voice-status" class="text-2xl font-black uppercase tracking-widest mb-4 blixa-gradient-text">Listening...</h2>
+                <p id="voice-transcript" class="text-zinc-400 text-lg italic max-w-md min-h-[3rem]">"Say something..."</p>
+            </div>
+            <button onclick="stopVoiceMode()" class="absolute bottom-16 p-6 bg-red-500 hover:bg-red-600 rounded-full shadow-2xl transition-transform active:scale-90">
+                <i data-lucide="phone-off" class="w-8 h-8 text-white"></i>
             </button>
         </div>
-        <div id="chat-list" class="flex-1 overflow-y-auto px-4 space-y-2 no-scrollbar"></div>
-        <div class="p-4 border-t border-zinc-200 dark:border-zinc-800">
-            <div class="flex items-center gap-3 p-4 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-2xl">
-                <img id="user-avatar-preview" src="https://ui-avatars.com/api/?name=User" class="w-11 h-11 rounded-full border-2 border-brand-500">
-                <div class="flex-1 text-xs font-black truncate uppercase text-zinc-900 dark:text-white">Operator 01</div>
-            </div>
-            <div class="grid grid-cols-2 gap-2 mt-4">
-                <button onclick="toggleDarkMode()" class="p-3 flex flex-col items-center gap-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition text-zinc-600 dark:text-zinc-400">
-                    <i data-lucide="sun" class="w-4 h-4 text-orange-400 dark:hidden"></i>
-                    <i data-lucide="moon" class="w-4 h-4 text-brand-500 hidden dark:block"></i>
-                    <span class="text-[9px] font-black">THEME</span>
-                </button>
-                <button onclick="openModal('settings-modal')" class="p-3 flex flex-col items-center gap-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition text-zinc-600 dark:text-zinc-400">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                    <span class="text-[9px] font-black">CORE</span>
-                </button>
-            </div>
-        </div>
-    </aside>
 
-    <main id="main-content" class="flex-1 flex flex-col relative">
-        <header class="flex-none flex items-center justify-between p-4 md:px-8 glass-card border-b z-40">
-            <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-600 dark:text-white"><i data-lucide="menu"></i></button>
+        <div id="loader" class="fixed inset-0 z-[999] bg-white dark:bg-surface-950 flex flex-col items-center justify-center">
+            <div class="relative flex items-center justify-center">
+                <div class="w-24 h-24 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                <img src="blixa.png" class="absolute w-12 h-12 rounded-xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
+            </div>
+            <p class="mt-6 blixa-gradient-text text-xl font-black uppercase tracking-widest">Neural Link Connecting</p>
+        </div>
+
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-[100] w-80 glass-card border-r transform -translate-x-full lg:translate-x-0 lg:relative transition-transform duration-500 flex flex-col">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-10">
+                    <div class="flex items-center gap-2">
+                        <img src="blixa.png" class="w-7 h-7 rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
+                        <span class="text-lg font-black tracking-tight text-zinc-900 dark:text-white uppercase">BLIXA <span class="text-brand-500">CORE</span></span>
+                    </div>
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><i data-lucide="x"></i></button>
+                </div>
+                <button onclick="newChat()" class="w-full flex items-center justify-center gap-3 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold shadow-xl active:scale-95 mb-8">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i> New Intelligence
+                </button>
+            </div>
+            <div id="chat-list" class="flex-1 overflow-y-auto px-4 space-y-2 no-scrollbar"></div>
+            <div class="p-4 border-t border-zinc-200 dark:border-zinc-800">
+                <div class="flex items-center gap-3 p-4 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-2xl">
+                    <img src="https://ui-avatars.com/api/?name=User" class="w-11 h-11 rounded-full border-2 border-brand-500">
+                    <div class="flex-1 text-xs font-black truncate uppercase text-zinc-900 dark:text-white">Operator 01</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <button onclick="toggleDarkMode()" class="p-3 flex flex-col items-center gap-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition text-zinc-600 dark:text-zinc-400">
+                        <i data-lucide="sun" class="w-4 h-4 text-orange-400 dark:hidden"></i>
+                        <i data-lucide="moon" class="w-4 h-4 text-brand-500 hidden dark:block"></i>
+                        <span class="text-[9px] font-black uppercase">Theme</span>
+                    </button>
+                    <button onclick="openModal('settings-modal')" class="p-3 flex flex-col items-center gap-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition text-zinc-600 dark:text-zinc-400">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span class="text-[9px] font-black uppercase">Core</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            <header class="flex-none flex items-center justify-between p-4 md:px-8 glass-card border-b z-40">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-600 dark:text-white"><i data-lucide="menu"></i></button>
+                    <div class="flex items-center gap-2">
+                        <img src="blixa.png" class="w-7 h-7 rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
+                        <span class="text-lg font-black tracking-tight text-zinc-900 dark:text-white uppercase">BLIXA <span class="text-brand-500">CORE</span></span>
+                    </div>
+                </div>
                 <div class="flex items-center gap-2">
-                    <img src="blixa.png" class="w-7 h-7 rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
-                    <span class="text-lg font-black tracking-tight text-zinc-900 dark:text-white uppercase">BLIXA <span class="text-brand-500">CORE</span></span>
+                    <button onclick="goHome()" class="p-2.5 text-zinc-500 hover:text-brand-500 hover:bg-brand-500/10 rounded-xl"><i data-lucide="home" class="w-5 h-5"></i></button>
+                    <button onclick="newChat()" class="p-2.5 bg-brand-500 text-white rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                </div>
+            </header>
+
+            <div id="chat-container" class="no-scrollbar">
+                <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center p-6 min-h-[70vh]">
+                    <div class="w-32 h-32 md:w-36 md:h-36 border-4 border-brand-500 bg-white rounded-full flex items-center justify-center shadow-2xl mb-8">
+                        <img src="blixa.png" class="w-20 h-20 md:w-24 md:h-24 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
+                    </div>
+                    <h1 class="text-5xl md:text-8xl font-black mb-4 tracking-tighter uppercase">
+                        <span class="text-zinc-900 dark:text-white">BLIXA</span> <span class="text-brand-500">CORE</span>
+                    </h1>
+                    <p class="text-zinc-500 dark:text-zinc-400 text-base md:text-lg max-w-xl font-medium">System Version 2026.4. Self-healing logic active.</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="goHome()" class="p-2.5 text-zinc-500 hover:text-brand-500 hover:bg-brand-500/10 rounded-xl"><i data-lucide="home" class="w-5 h-5"></i></button>
-                <button onclick="newChat()" class="p-2.5 bg-brand-500 text-white rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all"><i data-lucide="plus" class="w-5 h-5"></i></button>
-            </div>
-        </header>
 
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-12 space-y-12 no-scrollbar">
-            <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center">
-                <div class="w-32 h-32 md:w-36 md:h-36 border-4 border-brand-500 bg-white rounded-full flex items-center justify-center shadow-2xl mb-12">
-                    <img src="blixa.png" class="w-20 h-20 md:w-24 md:h-24 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
-                </div>
-                <h1 class="text-5xl md:text-8xl font-black mb-6 tracking-tighter uppercase">
-                    <span class="text-zinc-900 dark:text-white">BLIXA</span> <span class="text-brand-500">CORE</span>
-                </h1>
-                <p class="text-zinc-500 dark:text-zinc-400 text-lg max-w-2xl font-medium">System Version 2026.4. Self-healing logic active.</p>
-            </div>
-        </div>
-
-        <div id="input-wrapper" class="flex-none p-4 md:px-10 pb-8">
-            <div class="max-w-4xl mx-auto">
-                <div class="glass-card rounded-[32px] p-1.5 flex flex-col shadow-2xl border dark:border-white/5 transition-all focus-within:ring-2 ring-brand-500/20">
-                    <textarea id="user-input" rows="1" placeholder="Type command..." class="w-full bg-transparent px-5 py-3 outline-none resize-none text-zinc-800 dark:text-white max-h-48 text-base font-medium leading-normal" oninput="autoResize(this)"></textarea>
-                    <div class="flex items-center justify-between px-4 pb-2.5">
-                        <div class="flex gap-1.5">
+            <div id="input-wrapper">
+                <div class="max-w-4xl mx-auto">
+                    <div class="glass-card rounded-[32px] p-1.5 flex flex-col shadow-2xl border dark:border-white/5 transition-all focus-within:ring-2 ring-brand-500/20">
+                        <textarea id="user-input" rows="1" placeholder="Type command..." class="w-full bg-transparent px-5 py-3 outline-none resize-none text-zinc-800 dark:text-white max-h-32 text-base font-medium leading-normal" oninput="autoResize(this)"></textarea>
+                        <div class="flex items-center justify-between px-4 pb-2">
                             <button onclick="startVoiceMode()" class="p-2.5 text-zinc-400 hover:text-brand-500 hover:bg-brand-500/10 rounded-2xl transition-all"><i data-lucide="mic" class="w-6 h-6"></i></button>
+                            <button id="send-btn" onclick="handleSend()" class="p-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-20 text-white rounded-2xl shadow-xl transition-all active:scale-90" disabled><i data-lucide="navigation" class="w-5 h-5"></i></button>
                         </div>
-                        <button id="send-btn" onclick="handleSend()" class="p-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-20 text-white rounded-2xl shadow-xl transition-all active:scale-90" disabled><i data-lucide="navigation" class="w-5 h-5"></i></button>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <div id="settings-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
-        <div class="bg-white dark:bg-surface-900 w-full max-w-2xl rounded-[40px] overflow-hidden shadow-2xl p-10 space-y-8">
-            <div class="flex justify-between items-center"><h2 class="text-3xl font-black">Core Config</h2><button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button></div>
-            <input type="password" id="api-key-input" placeholder="Neural Key" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none">
-            <input type="text" id="api-url-input" placeholder="Endpoint URL" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none">
-            <button onclick="saveSettings()" class="w-full py-5 bg-brand-500 text-white font-black rounded-2xl">Synchronize</button>
+        <div class="bg-white dark:bg-surface-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl p-10 space-y-6">
+            <div class="flex justify-between items-center"><h2 class="text-2xl font-black uppercase">Core Config</h2><button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+            <input type="password" id="api-key-input" placeholder="Neural Key" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none dark:text-white">
+            <input type="text" id="api-url-input" placeholder="Endpoint URL" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none dark:text-white">
+            <button onclick="saveSettings()" class="w-full py-4 bg-brand-500 text-white font-black rounded-2xl uppercase tracking-widest">Synchronize</button>
         </div>
     </div>
 
@@ -211,7 +232,6 @@
             userInput: document.getElementById('user-input'),
             sendBtn: document.getElementById('send-btn'),
             welcomeView: document.getElementById('welcome-view'),
-            terminal: document.getElementById('terminal-content'),
             voiceOverlay: document.getElementById('voice-overlay'),
             voiceTranscript: document.getElementById('voice-transcript'),
             voiceStatus: document.getElementById('voice-status')
@@ -226,7 +246,7 @@
             document.getElementById('api-url-input').value = state.apiBase;
             document.getElementById('api-key-input').value = state.apiKey;
             renderChatList();
-            setTimeout(() => { document.getElementById('loader').remove(); }, 1000);
+            setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
         };
 
         function startVoiceMode() { if (!recognition) return; state.voiceMode = true; elements.voiceOverlay.classList.remove('hidden'); recognition.start(); }
@@ -272,7 +292,6 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function goHome() { location.reload(); }
-        function toggleTerminal() { document.getElementById('blixa-terminal').classList.toggle('translate-x-[200%]'); }
 
         function saveSettings() {
             state.apiBase = document.getElementById('api-url-input').value;
@@ -285,6 +304,7 @@
         function newChat() {
             state.currentChatId = null;
             elements.chatContainer.innerHTML = '';
+            elements.chatContainer.appendChild(elements.welcomeView);
             elements.welcomeView.classList.remove('hidden');
             renderChatList();
         }
@@ -293,7 +313,7 @@
             elements.chatList.innerHTML = state.chats.slice().reverse().map(chat => `
                 <div class="chat-item group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all ${state.currentChatId === chat.id ? 'bg-brand-500 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'}" onclick="loadChat(${chat.id})">
                     <span class="text-[10px] font-black uppercase tracking-tighter truncate pr-6">${chat.title}</span>
-                    <button onclick="deleteChat(event, ${chat.id})" class="delete-btn absolute right-2 p-2 hover:bg-red-500/20 hover:text-red-500 rounded-xl transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button onclick="deleteChat(event, ${chat.id})" class="absolute right-2 p-2 hover:text-red-500 rounded-xl"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
@@ -303,9 +323,9 @@
             state.currentChatId = id;
             const chat = state.chats.find(c => c.id === id);
             elements.chatContainer.innerHTML = '';
-            elements.welcomeView.classList.add('hidden');
             chat.messages.forEach(msg => appendUI(msg.role, msg.content));
             renderChatList();
+            if (window.innerWidth < 1024) toggleSidebar();
         }
 
         function deleteChat(event, id) {
@@ -316,4 +336,54 @@
         }
 
         async function handleSend() {
-    
+            const val = elements.userInput.value.trim();
+            if (!val || state.isTyping) return;
+            if (!state.currentChatId) {
+                state.currentChatId = Date.now();
+                state.chats.push({ id: state.currentChatId, title: val.substring(0, 25), messages: [] });
+                elements.chatContainer.innerHTML = '';
+            }
+            const chat = state.chats.find(c => c.id === state.currentChatId);
+            chat.messages.push({ role: 'user', content: val });
+            appendUI('user', val);
+            elements.userInput.value = '';
+            autoResize(elements.userInput);
+            state.isTyping = true;
+            const aiId = appendUI('assistant', '...');
+            const reply = await callAPI(chat.messages);
+            await typeWriter(aiId, reply);
+            chat.messages.push({ role: 'assistant', content: reply });
+            localStorage.setItem('blixa_chats', JSON.stringify(state.chats));
+            state.isTyping = false;
+            renderChatList();
+        }
+
+        async function callAPI(messages) {
+            try {
+                const response = await fetch(`${state.apiBase}/chat/completions`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${state.apiKey}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ "model": state.model, "messages": messages })
+                });
+                const data = await response.json();
+                return data.choices?.[0]?.message?.content || "Signal lost.";
+            } catch (e) { return "ERROR: Connection refused."; }
+        }
+
+        function appendUI(role, text) {
+            const id = 'm-' + Math.random().toString(36).substr(2, 9);
+            const isUser = role === 'user';
+            const html = `<div class="flex flex-col ${isUser ? 'items-end' : 'items-start'} w-full mb-6 p-4"><div class="bubble ${isUser ? 'bubble-user' : 'bubble-ai'}"><div id="${id}" class="prose dark:prose-invert prose-sm">${isUser ? marked.parse(text) : text}</div></div></div>`;
+            elements.chatContainer.insertAdjacentHTML('beforeend', html);
+            elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+            return id;
+        }
+
+        async function typeWriter(id, text) {
+            const el = document.getElementById(id); el.innerHTML = '';
+            const words = text.split(' '); let current = '';
+            for(const word of words) { current += word + ' '; el.innerHTML = marked.parse(current); elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight; await new Promise(r => setTimeout(r, 15)); }
+        }
+    </script>
+</body>
+</html>
