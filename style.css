@@ -1,36 +1,49 @@
-/* --- CORE STABILITY --- */
-* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
-.dark ::-webkit-scrollbar-thumb { background: #3f3f46; }
 
-body { 
-    margin: 0;
-    font-family: 'Plus Jakarta Sans', sans-serif; 
-    height: 100vh; 
-    width: 100vw; 
-    overflow: hidden; 
-    background-color: #f8fafc;
+/* Layout Reset */
+* { box-sizing: border-box; }
+body, html { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; }
+
+/* Sidebar Glass Effect */
+.glass-sidebar {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
 }
-.dark body { background-color: #09090b; }
+.dark .glass-sidebar {
+    background: rgba(9, 9, 11, 0.95);
+}
 
-/* --- GRADIENTS & THEMES --- */
-.blixa-gradient-text { background: linear-gradient(135deg, #ff0000, #ffea00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.full-gradient { background: linear-gradient(to right, #0ea5e9, #a855f7, #f43f5e, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
-
-.glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px); border: 1px solid rgba(0, 0, 0, 0.05); }
-.dark .glass-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.05); }
-
-/* --- BUBBLE STYLING --- */
-.bubble { max-width: 85%; padding: 1.25rem; border-radius: 24px; position: relative; word-wrap: break-word; line-height: 1.6; }
-.bubble-user { background: #ec4899; color: white; border-bottom-right-radius: 4px; align-self: flex-end; box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.3); }
-.bubble-ai { background: white; border: 1px solid #e2e8f0; border-bottom-left-radius: 4px; align-self: flex-start; color: #1e293b; }
-.dark .bubble-ai { background: #1e293b; border-color: #334155; color: #f1f5f9; }
-
-/* --- SYSTEM ELEMENTS --- */
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; position: relative; }
-.status-dot::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid #10b981; animation: status-pulse 2s infinite; }
-@keyframes status-pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-
+/* Scrollbar Control */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Chat Bubbles */
+.bubble {
+    max-width: 85%;
+    padding: 1rem 1.25rem;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    position: relative;
+    word-wrap: break-word;
+}
+.bubble-user {
+    background: #ec4899;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+.bubble-ai {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+.dark .bubble-ai {
+    background: #18181b;
+    border-color: #27272a;
+    color: #f4f4f5;
+}
+
+/* Utilities */
+textarea { overflow: hidden; }
