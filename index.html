@@ -3,124 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blixa Quantum Core | Professional Edition</title>
+    <title>Blixa Core | GitHub Edition</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
     
+    <script>
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: { 
+                extend: { 
+                    colors: { brand: { 500: '#ec4899' }, surface: { 950: '#09090b' } }
+                } 
+            }
+        }
+    </script>
+
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark:text-white">
+<body class="bg-slate-50 dark:bg-surface-950 transition-colors duration-300">
 
-    <div id="loader" class="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center transition-all duration-700">
-        <div class="relative scale-110">
-            <div class="w-24 h-24 border-4 border-zinc-100 dark:border-zinc-900 rounded-full"></div>
-            <div class="absolute inset-0 w-24 h-24 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-            <img src="blixa.png" class="absolute inset-0 m-auto w-12 h-12 rounded-xl shadow-2xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
-        </div>
-        <p class="mt-10 blixa-gradient-text text-lg font-black tracking-[0.3em] uppercase animate-pulse">Initializing Neural Link</p>
+    <div id="loader" class="fixed inset-0 z-[9999] bg-white dark:bg-surface-950 flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
 
-    <div id="voice-overlay" class="fixed inset-0 z-[1000] hidden bg-zinc-950/98 backdrop-blur-3xl items-center justify-center flex-col text-center p-10">
-        <div class="w-48 h-48 bg-brand-500/10 rounded-full flex items-center justify-center mb-12 relative">
-            <div class="absolute inset-0 bg-brand-500 rounded-full animate-ping opacity-20"></div>
-            <div class="w-32 h-32 bg-brand-500 rounded-full flex items-center justify-center shadow-2xl z-10">
-                <i data-lucide="mic" class="w-16 h-16 text-white"></i>
-            </div>
-        </div>
-        <h2 class="text-4xl font-black text-white tracking-tighter mb-4">Listening...</h2>
-        <p id="v-transcript" class="text-zinc-500 text-xl font-medium max-w-xl italic">Ready for command.</p>
-        <button onclick="stopVoiceMode()" class="mt-20 p-6 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-3xl transition-all">
-            <i data-lucide="mic-off" class="w-8 h-8 text-red-500"></i>
-        </button>
-    </div>
-
-    <div id="blixa-terminal" class="fixed bottom-32 right-8 w-80 h-56 bg-zinc-950/90 rounded-[28px] border border-white/10 p-5 shadow-2xl hidden md:block backdrop-blur-md pointer-events-auto">
-        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
-            <div class="flex items-center gap-3">
-                <div class="status-dot"></div>
-                <span class="text-[10px] font-black text-white uppercase tracking-widest">Logic Hub</span>
-            </div>
-        </div>
-        <div id="terminal-content" class="h-32 overflow-y-auto no-scrollbar font-mono text-[10px]"></div>
-    </div>
-
-    <div class="flex h-screen bg-surface-50 dark:bg-surface-950 overflow-hidden">
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-[500] w-80 glass-card border-r transform -translate-x-full lg:translate-x-0 lg:relative transition-transform duration-500 flex flex-col">
-            <div class="p-8">
-                <div class="flex items-center justify-between mb-12">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-pink-600 flex items-center justify-center shadow-xl rotate-3">
-                            <img src="blixa.png" class="w-8 h-8 rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
-                        </div>
-                        <span class="blixa-gradient-text text-2xl font-black">Blixa</span>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-80 glass-sidebar border-r dark:border-white/5 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
+                        <span class="text-white font-black text-xl">B</span>
                     </div>
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 text-zinc-400"><i data-lucide="x"></i></button>
+                    <span class="text-2xl font-extrabold tracking-tighter dark:text-white">Blixa</span>
                 </div>
-                <button onclick="newChat()" class="w-full flex items-center justify-center gap-3 py-5 bg-brand-500 text-white rounded-[22px] font-bold shadow-xl active:scale-95 mb-8">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i> New Neural Link
-                </button>
+                <button onclick="toggleSidebar()" class="lg:hidden dark:text-white"><i data-lucide="x"></i></button>
             </div>
-            <div id="chat-list" class="flex-1 overflow-y-auto px-6 space-y-4 no-scrollbar"></div>
-            <div class="p-6 border-t border-zinc-100 dark:border-white/5">
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="toggleDarkMode()" class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-[24px] flex flex-col items-center gap-2">
-                        <i data-lucide="sun" class="w-5 h-5 text-amber-500 dark:hidden"></i>
-                        <i data-lucide="moon" class="w-5 h-5 text-indigo-400 hidden dark:block"></i>
-                        <span class="text-[10px] font-black">THEME</span>
-                    </button>
-                    <button onclick="openModal('settings-modal')" class="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-[24px] flex flex-col items-center gap-2">
-                        <i data-lucide="settings" class="w-5 h-5 text-zinc-400"></i>
-                        <span class="text-[10px] font-black">CONFIG</span>
-                    </button>
-                </div>
+            <button onclick="newChat()" class="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2">
+                <i data-lucide="plus"></i> New Link
+            </button>
+        </div>
+        <div id="chat-list" class="flex-1 overflow-y-auto px-4 space-y-2 no-scrollbar"></div>
+        <div class="p-6 border-t dark:border-white/5 space-y-4">
+            <button onclick="toggleDarkMode()" class="w-full p-4 bg-slate-100 dark:bg-white/5 rounded-2xl flex items-center justify-center gap-2 dark:text-white">
+                <i data-lucide="moon" class="w-4 h-4"></i> THEME
+            </button>
+            <button onclick="openModal('settings-modal')" class="w-full p-4 bg-slate-100 dark:bg-white/5 rounded-2xl flex items-center justify-center gap-2 dark:text-white">
+                <i data-lucide="settings" class="w-4 h-4"></i> CONFIG
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen relative overflow-hidden lg:ml-0">
+        <header class="h-20 flex items-center justify-between px-6 border-b dark:bg-surface-950/50 backdrop-blur-md dark:border-white/5 z-40">
+            <button onclick="toggleSidebar()" class="lg:hidden dark:text-white"><i data-lucide="menu"></i></button>
+            <div class="text-lg font-black dark:text-white">CORE <span class="text-brand-500">ENGINE</span></div>
+            <button onclick="goHome()" class="p-2 dark:text-white"><i data-lucide="home"></i></button>
+        </header>
+
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-12 space-y-8 pb-40 no-scrollbar scroll-smooth">
+            <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center">
+                <h1 class="text-5xl md:text-7xl font-black mb-4 dark:text-white tracking-tighter">Blixa AI</h1>
+                <p class="text-slate-500 dark:text-slate-400 max-w-md">Quantum-ready neural interface for professional operations.</p>
             </div>
-        </aside>
+        </div>
 
-        <main class="flex-1 flex flex-col relative overflow-hidden">
-            <header class="flex items-center justify-between px-6 md:px-12 h-20 glass-card border-b z-[400] relative">
-                <div class="flex items-center gap-6">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-3"><i data-lucide="align-left"></i></button>
-                    <span class="text-xl font-black text-zinc-900 dark:text-white">BLIXA <span class="text-brand-500">CORE</span></span>
-                </div>
-                <button onclick="goHome()" class="p-3 text-zinc-500"><i data-lucide="home"></i></button>
-            </header>
-
-            <div id="chat-container" class="flex-1 overflow-y-auto p-6 md:p-16 space-y-12 pb-48 no-scrollbar scroll-smooth">
-                <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center">
-                    <h1 class="text-6xl md:text-8xl font-black full-gradient tracking-tighter mb-8">Intelligence.<br>Perfected.</h1>
-                </div>
-            </div>
-
-            <div class="absolute bottom-0 left-0 right-0 p-6 md:px-12 pb-10 pointer-events-none">
-                <div class="max-w-5xl mx-auto pointer-events-auto">
-                    <div class="glass-card rounded-[36px] p-2 flex flex-col shadow-2xl border dark:border-white/5 transition-all focus-within:ring-4 ring-brand-500/10">
-                        <div class="flex items-end gap-2 relative z-[100]">
-                            <textarea id="user-input" rows="1" placeholder="Command Blixa..." class="w-full bg-transparent px-6 py-5 outline-none resize-none text-zinc-800 dark:text-white max-h-48 font-medium leading-relaxed" oninput="autoResize(this)"></textarea>
-                            <div class="flex items-center gap-2 pr-3 pb-3">
-                                <button onclick="startVoiceMode()" class="p-3 text-zinc-400 hover:text-brand-500 transition-all"><i data-lucide="mic"></i></button>
-                                <button id="send-btn" onclick="handleSend()" class="p-4 bg-brand-500 text-white rounded-2xl shadow-xl disabled:opacity-20 transition-all" disabled><i data-lucide="arrow-up"></i></button>
-                            </div>
-                        </div>
+        <div class="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-gradient-to-t from-slate-50 dark:from-surface-950 via-transparent">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white dark:bg-zinc-900 rounded-[28px] p-2 shadow-2xl border dark:border-white/10 flex flex-col">
+                    <textarea id="user-input" rows="1" placeholder="Enter command..." class="w-full bg-transparent p-4 outline-none resize-none dark:text-white max-h-40" oninput="autoResize(this)"></textarea>
+                    <div class="flex items-center justify-between px-4 pb-2">
+                        <button onclick="startVoice()" class="p-2 text-slate-400 hover:text-brand-500"><i data-lucide="mic"></i></button>
+                        <button id="send-btn" onclick="handleSend()" class="p-3 bg-brand-500 text-white rounded-xl disabled:opacity-30 transition-all" disabled><i data-lucide="send"></i></button>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
-    <div id="settings-modal" class="fixed inset-0 z-[10000] hidden flex items-center justify-center bg-zinc-950/90 backdrop-blur-3xl p-6">
-        <div class="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[40px] p-10 border dark:border-white/5 shadow-2xl">
-            <div class="flex justify-between items-center mb-10">
-                <h2 class="text-4xl font-black tracking-tighter">System Config</h2>
-                <button onclick="closeModal('settings-modal')"><i data-lucide="x"></i></button>
+    <div id="settings-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-md rounded-[32px] p-8 shadow-2xl border dark:border-white/10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold dark:text-white">Settings</h2>
+                <button onclick="closeModal('settings-modal')" class="dark:text-white"><i data-lucide="x"></i></button>
             </div>
-            <div class="space-y-6">
-                <input type="password" id="api-key-input" placeholder="API Key" class="w-full p-5 rounded-3xl border dark:border-white/5 bg-zinc-50 dark:bg-zinc-950 outline-none text-zinc-800 dark:text-white">
-                <input type="text" id="api-url-input" placeholder="Gateway URL" class="w-full p-5 rounded-3xl border dark:border-white/5 bg-zinc-50 dark:bg-zinc-950 outline-none text-zinc-800 dark:text-white">
-                <button onclick="saveSettings()" class="w-full py-6 bg-brand-500 text-white font-black rounded-3xl shadow-2xl active:scale-95 transition-all">Establish Link</button>
-            </div>
+            <input type="password" id="api-key-input" placeholder="API Key" class="w-full p-4 bg-slate-100 dark:bg-black rounded-xl mb-4 outline-none dark:text-white">
+            <input type="text" id="api-url-input" placeholder="Gateway URL" class="w-full p-4 bg-slate-100 dark:bg-black rounded-xl mb-6 outline-none dark:text-white">
+            <button onclick="saveSettings()" class="w-full py-4 bg-brand-500 text-white font-bold rounded-xl active:scale-95 transition-transform">Save Configuration</button>
         </div>
     </div>
 
