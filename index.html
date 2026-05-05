@@ -51,7 +51,6 @@
         .chat-item .delete-btn { opacity: 0; transition: all 0.2s; }
         .chat-item:hover .delete-btn { opacity: 1; }
 
-        /* Dark Mode Text Fix */
         .dark .text-zinc-900, .dark .text-zinc-800, .dark .text-zinc-600 { color: #f4f4f5 !important; }
         .dark .text-zinc-500, .dark .text-zinc-400 { color: #a1a1aa !important; }
         .dark .prose { color: #f4f4f5 !important; }
@@ -88,20 +87,6 @@
             <img src="blixa.png" class="absolute w-12 h-12 rounded-xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
         </div>
         <p class="mt-6 blixa-gradient-text text-xl font-black uppercase tracking-widest">Neural Link Connecting</p>
-    </div>
-
-    <div id="blixa-terminal" class="fixed bottom-32 right-6 z-50 w-72 h-48 bg-black/90 rounded-2xl border border-white/10 p-4 shadow-2xl translate-x-[200%] md:translate-x-0 hidden md:block">
-        <div class="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
-            <div class="flex items-center gap-2">
-                <div class="status-pulse"></div>
-                <span class="text-[10px] font-bold text-white uppercase tracking-tighter">System Terminal</span>
-            </div>
-            <button onclick="toggleTerminal()" class="text-zinc-500 hover:text-white"><i data-lucide="minus" class="w-3 h-3"></i></button>
-        </div>
-        <div id="terminal-content" class="h-32 overflow-y-auto no-scrollbar">
-            <div class="terminal-line">> Logic Gates: Active</div>
-            <div class="terminal-line">> System: Stable</div>
-        </div>
     </div>
 
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-80 glass-card border-r transform -translate-x-full lg:translate-x-0 lg:relative transition-transform duration-500 flex flex-col">
@@ -141,8 +126,8 @@
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative overflow-hidden">
-        <header class="flex items-center justify-between p-4 md:px-8 glass-card border-b z-40">
+    <main class="flex-1 flex flex-col h-screen relative overflow-hidden">
+        <header class="flex-shrink-0 flex items-center justify-between p-4 md:px-8 glass-card border-b z-40">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-600 dark:text-white"><i data-lucide="menu"></i></button>
                 <div class="flex items-center gap-2">
@@ -156,7 +141,7 @@
             </div>
         </header>
 
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-12 space-y-12 pb-44 no-scrollbar">
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-12 space-y-12 no-scrollbar">
             <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center py-20">
                 <div class="w-36 h-36 border-4 border-brand-500 bg-white rounded-full flex items-center justify-center shadow-2xl mb-12 rotate-6">
                     <img src="blixa.png" class="w-24 h-24 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
@@ -168,8 +153,8 @@
             </div>
         </div>
 
-        <div class="absolute bottom-0 left-0 right-0 p-4 md:px-10 pb-8 bg-gradient-to-t from-white dark:from-surface-950 via-transparent pointer-events-none">
-            <div class="max-w-4xl mx-auto pointer-events-auto">
+        <div class="flex-shrink-0 p-4 md:px-10 pb-8 bg-gradient-to-t from-white dark:from-surface-950 via-white/80 dark:via-surface-950/80">
+            <div class="max-w-4xl mx-auto">
                 <div class="glass-card rounded-[32px] p-1.5 flex flex-col shadow-2xl border dark:border-white/5 transition-all focus-within:ring-2 ring-brand-500/20">
                     <textarea id="user-input" rows="1" placeholder="Type command..." class="w-full bg-transparent px-5 py-3 outline-none resize-none text-zinc-800 dark:text-white max-h-48 text-base font-medium leading-normal" oninput="autoResize(this)"></textarea>
                     <div class="flex items-center justify-between px-4 pb-2.5">
@@ -212,7 +197,6 @@
             userInput: document.getElementById('user-input'),
             sendBtn: document.getElementById('send-btn'),
             welcomeView: document.getElementById('welcome-view'),
-            terminal: document.getElementById('terminal-content'),
             voiceOverlay: document.getElementById('voice-overlay'),
             voiceTranscript: document.getElementById('voice-transcript'),
             voiceStatus: document.getElementById('voice-status')
@@ -301,7 +285,6 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function goHome() { location.reload(); }
-        function toggleTerminal() { document.getElementById('blixa-terminal').classList.toggle('translate-x-[200%]'); }
 
         function saveSettings() {
             state.apiBase = document.getElementById('api-url-input').value;
@@ -353,72 +336,4 @@
         }
 
         async function handleSend() {
-            const val = elements.userInput.value.trim();
-            if (!val || state.isTyping) return;
-            
-            if (!state.currentChatId) {
-                state.currentChatId = Date.now();
-                state.chats.push({ id: state.currentChatId, title: val.substring(0, 25), messages: [] });
-                elements.welcomeView.classList.add('hidden');
-            }
-            
-            const chat = state.chats.find(c => c.id === state.currentChatId);
-            chat.messages.push({ role: 'user', content: val });
-            
-            appendUI('user', val);
-            elements.userInput.value = '';
-            autoResize(elements.userInput);
-            
-            state.isTyping = true;
-            const aiId = appendUI('assistant', '...');
-            
-            const reply = await callAPI(chat.messages);
-            await typeWriter(aiId, reply);
-            
-            chat.messages.push({ role: 'assistant', content: reply });
-            localStorage.setItem('blixa_chats', JSON.stringify(state.chats));
-            state.isTyping = false;
-            renderChatList();
-        }
-
-        async function callAPI(messages) {
-            try {
-                const response = await fetch(`${state.apiBase}/chat/completions`, {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${state.apiKey}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ "model": state.model, "messages": messages })
-                });
-                const data = await response.json();
-                return data.choices?.[0]?.message?.content || "Signal lost.";
-            } catch (e) { return "ERROR: Connection refused."; }
-        }
-
-        function appendUI(role, text) {
-            const id = 'm-' + Math.random().toString(36).substr(2, 9);
-            const isUser = role === 'user';
-            const html = `
-                <div class="flex flex-col ${isUser ? 'items-end' : 'items-start'} w-full">
-                    <div class="bubble ${isUser ? 'bubble-user' : 'bubble-ai'}">
-                        <div id="${id}" class="prose dark:prose-invert prose-sm">${isUser ? marked.parse(text) : text}</div>
-                    </div>
-                </div>`;
-            elements.chatContainer.insertAdjacentHTML('beforeend', html);
-            elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
-            return id;
-        }
-
-        async function typeWriter(id, text) {
-            const el = document.getElementById(id);
-            el.innerHTML = '';
-            const words = text.split(' ');
-            let current = '';
-            for(const word of words) {
-                current += word + ' ';
-                el.innerHTML = marked.parse(current);
-                elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
-                await new Promise(r => setTimeout(r, 15));
-            }
-        }
-    </script>
-</body>
-</html>
+            const val = elements.
