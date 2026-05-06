@@ -17,6 +17,7 @@
                 extend: { 
                     colors: { 
                         brand: { 500: '#ec4899', 600: '#db2777' },
+                        skybrand: { 400: '#38bdf8', 500: '#0ea5e9' },
                         surface: { 50: '#f8fafc', 900: '#0f172a', 950: '#09090b' } 
                     },
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
@@ -30,96 +31,55 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark ::-webkit-scrollbar-thumb { background: #27272a; }
 
-        html, body { 
-            height: 100%; 
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
-        }
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .dark body { background-color: #09090b; }
         
         .blixa-gradient-text { background: linear-gradient(135deg, #ff0000, #ffea00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0, 0, 0, 0.05); }
         .dark .glass-card { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
 
-        #blixa-terminal { font-family: 'JetBrains Mono', monospace; font-size: 11px; transition: all 0.5s ease; }
-        .terminal-line { margin-bottom: 2px; color: #10b981; }
         .bubble { max-width: 85%; padding: 1.25rem; border-radius: 24px; position: relative; }
         .bubble-user { background: #ec4899; color: white; border-bottom-right-radius: 4px; }
         .bubble-ai { background: white; border: 1px solid #e2e8f0; border-bottom-left-radius: 4px; }
         .dark .bubble-ai { background: #18181b; border-color: #27272a; color: #f4f4f5; }
 
-        .status-pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: blink 1.5s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .app-container { display: flex; height: 100dvh; width: 100%; overflow: hidden; }
+        #main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; overflow: hidden; }
+        #chat-container { flex: 1; overflow-y: auto; padding-bottom: 120px; }
 
-        .dark .text-zinc-900, .dark .text-zinc-800, .dark .text-zinc-600 { color: #f4f4f5 !important; }
-        .dark .text-zinc-500, .dark .text-zinc-400 { color: #a1a1aa !important; }
-        .dark .prose { color: #f4f4f5 !important; }
-
-        /* Layout Fix for Mobile Browser */
-        .app-container {
-            display: flex;
-            height: 100dvh; /* Dynamic viewport height */
-            width: 100%;
-            overflow: hidden;
-        }
-
-        #main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        #chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 120px; /* Space for fixed input */
-        }
-
-        #input-wrapper {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 1rem;
-            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-            background: linear-gradient(to top, var(--bg-color) 80%, transparent);
-            z-index: 50;
-        }
+        #input-wrapper { position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem; padding-bottom: calc(1rem + env(safe-area-inset-bottom)); background: linear-gradient(to top, var(--bg-color) 80%, transparent); z-index: 50; }
         .dark #input-wrapper { --bg-color: #09090b; }
         #input-wrapper { --bg-color: #f8fafc; }
 
-        @keyframes wave {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.5); opacity: 0.2; }
+        @keyframes pulse-ring { 
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.2; }
+            100% { transform: scale(0.8); opacity: 0.5; }
         }
-        .voice-wave { animation: wave 2s infinite ease-in-out; }
+        .mic-glow { box-shadow: 0 0 30px 10px rgba(236, 72, 153, 0.4); animation: mic-shimmer 2s infinite ease-in-out; }
+        @keyframes mic-shimmer { 0%, 100% { box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.4); } 50% { box-shadow: 0 0 50px 20px rgba(236, 72, 153, 0.6); } }
+        .voice-ring { animation: pulse-ring 3s infinite ease-in-out; }
     </style>
 </head>
 <body class="bg-surface-50 dark:bg-surface-950 text-zinc-900 dark:text-white">
 
     <div class="app-container">
-        <div id="voice-overlay" class="fixed inset-0 z-[300] hidden bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center text-white">
-            <div class="relative flex items-center justify-center mb-20">
-                <div class="absolute w-40 h-40 bg-brand-500/30 rounded-full voice-wave"></div>
-                <div class="absolute w-56 h-56 bg-brand-500/10 rounded-full voice-wave" style="animation-delay: 0.5s"></div>
-                <div class="z-10 w-24 h-24 bg-brand-500 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(236,72,153,0.5)]">
-                    <i data-lucide="mic" id="voice-mic-icon" class="w-10 h-10 text-white animate-pulse"></i>
+        <div id="voice-overlay" class="fixed inset-0 z-[300] hidden bg-black flex flex-col items-center justify-center text-white transition-all duration-500">
+            <div class="relative flex items-center justify-center mb-16">
+                <div class="absolute w-64 h-64 border-2 border-brand-500/20 rounded-full voice-ring"></div>
+                <div class="absolute w-80 h-80 border-2 border-brand-500/10 rounded-full voice-ring" style="animation-delay: 1.5s"></div>
+                
+                <div id="mic-container" class="z-10 w-32 h-32 bg-brand-500 rounded-full flex items-center justify-center mic-glow shadow-2xl">
+                    <i data-lucide="mic" id="voice-mic-icon" class="w-14 h-14 text-white"></i>
                 </div>
             </div>
+            
             <div class="text-center px-10">
-                <h2 id="voice-status" class="text-2xl font-black uppercase tracking-widest mb-4 blixa-gradient-text">Listening...</h2>
-                <p id="voice-transcript" class="text-zinc-400 text-lg italic max-w-md min-h-[3rem]">"Say something..."</p>
+                <p id="voice-transcript" class="text-white text-2xl font-medium italic max-w-lg min-h-[4rem]">"Say something..."</p>
             </div>
-            <button onclick="stopVoiceMode()" class="absolute bottom-16 p-6 bg-red-500 hover:bg-red-600 rounded-full shadow-2xl transition-transform active:scale-90">
-                <i data-lucide="phone-off" class="w-8 h-8 text-white"></i>
+
+            <button onclick="stopVoiceMode()" class="absolute bottom-12 p-5 bg-white/10 hover:bg-red-500 rounded-full transition-all active:scale-90 border border-white/20">
+                <i data-lucide="x" class="w-8 h-8 text-white"></i>
             </button>
         </div>
 
@@ -128,7 +88,11 @@
                 <div class="w-24 h-24 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
                 <img src="blixa.png" class="absolute w-12 h-12 rounded-xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4712/4712139.png'">
             </div>
-            <p class="mt-6 blixa-gradient-text text-xl font-black uppercase tracking-widest">Neural Link Connecting</p>
+            <p class="mt-6 text-xl font-black uppercase tracking-widest">
+                <span class="text-black dark:text-white">BLIXA</span> 
+                <span class="text-brand-500">CORE</span> 
+                <span class="text-sky-400">CONNECTING</span>
+            </p>
         </div>
 
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-[100] w-80 glass-card border-r transform -translate-x-full lg:translate-x-0 lg:relative transition-transform duration-500 flex flex-col">
@@ -140,7 +104,7 @@
                     </div>
                     <button onclick="toggleSidebar()" class="lg:hidden p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><i data-lucide="x"></i></button>
                 </div>
-                <button onclick="newChat()" class="w-full flex items-center justify-center gap-3 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold shadow-xl active:scale-95 mb-8">
+                <button onclick="newChat()" class="w-full flex items-center justify-center gap-3 py-4 bg-sky-400 hover:bg-sky-500 text-white rounded-2xl font-bold shadow-xl active:scale-95 mb-8">
                     <i data-lucide="sparkles" class="w-5 h-5"></i> New Intelligence
                 </button>
             </div>
@@ -193,11 +157,11 @@
 
             <div id="input-wrapper">
                 <div class="max-w-4xl mx-auto">
-                    <div class="glass-card rounded-[32px] p-1.5 flex flex-col shadow-2xl border dark:border-white/5 transition-all focus-within:ring-2 ring-brand-500/20">
-                        <textarea id="user-input" rows="1" placeholder="Type command..." class="w-full bg-transparent px-5 py-3 outline-none resize-none text-zinc-800 dark:text-white max-h-32 text-base font-medium leading-normal" oninput="autoResize(this)"></textarea>
+                    <div class="glass-card rounded-[32px] p-1.5 flex flex-col shadow-2xl border dark:border-white/5 focus-within:ring-2 ring-brand-500/20">
+                        <textarea id="user-input" rows="1" placeholder="Type command..." class="w-full bg-transparent px-5 py-3 outline-none resize-none text-zinc-800 dark:text-white max-h-32 text-base font-medium" oninput="autoResize(this)"></textarea>
                         <div class="flex items-center justify-between px-4 pb-2">
                             <button onclick="startVoiceMode()" class="p-2.5 text-zinc-400 hover:text-brand-500 hover:bg-brand-500/10 rounded-2xl transition-all"><i data-lucide="mic" class="w-6 h-6"></i></button>
-                            <button id="send-btn" onclick="handleSend()" class="p-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-20 text-white rounded-2xl shadow-xl transition-all active:scale-90" disabled><i data-lucide="navigation" class="w-5 h-5"></i></button>
+                            <button id="send-btn" onclick="handleSend()" class="p-3 bg-brand-500 text-white rounded-2xl shadow-xl transition-all active:scale-90" disabled><i data-lucide="navigation" class="w-5 h-5"></i></button>
                         </div>
                     </div>
                 </div>
@@ -206,7 +170,7 @@
     </div>
 
     <div id="settings-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
-        <div class="bg-white dark:bg-surface-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl p-10 space-y-6">
+        <div class="bg-white dark:bg-surface-900 w-full max-w-md rounded-[40px] overflow-hidden p-10 space-y-6">
             <div class="flex justify-between items-center"><h2 class="text-2xl font-black uppercase">Core Config</h2><button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button></div>
             <input type="password" id="api-key-input" placeholder="Neural Key" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none dark:text-white">
             <input type="text" id="api-url-input" placeholder="Endpoint URL" class="w-full p-4 rounded-2xl border dark:border-zinc-800 bg-transparent outline-none dark:text-white">
@@ -233,12 +197,15 @@
             sendBtn: document.getElementById('send-btn'),
             welcomeView: document.getElementById('welcome-view'),
             voiceOverlay: document.getElementById('voice-overlay'),
-            voiceTranscript: document.getElementById('voice-transcript'),
-            voiceStatus: document.getElementById('voice-status')
+            voiceTranscript: document.getElementById('voice-transcript')
         };
 
         const recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : null;
-        if(recognition) { recognition.continuous = false; recognition.interimResults = true; recognition.lang = 'en-US'; }
+        if(recognition) { 
+            recognition.continuous = false; 
+            recognition.interimResults = true; 
+            recognition.lang = 'en-US'; 
+        }
 
         window.onload = () => {
             lucide.createIcons();
@@ -249,13 +216,26 @@
             setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
         };
 
-        function startVoiceMode() { if (!recognition) return; state.voiceMode = true; elements.voiceOverlay.classList.remove('hidden'); recognition.start(); }
-        function stopVoiceMode() { state.voiceMode = false; elements.voiceOverlay.classList.add('hidden'); recognition.stop(); window.speechSynthesis.cancel(); }
+        function startVoiceMode() { 
+            if (!recognition) return; 
+            state.voiceMode = true; 
+            elements.voiceOverlay.classList.remove('hidden'); 
+            elements.voiceTranscript.innerText = '"Say something..."';
+            recognition.start(); 
+        }
+
+        function stopVoiceMode() { 
+            state.voiceMode = false; 
+            elements.voiceOverlay.classList.add('hidden'); 
+            recognition.stop(); 
+            window.speechSynthesis.cancel(); 
+        }
 
         if(recognition) {
             recognition.onresult = (event) => {
                 const text = event.results[0][0].transcript;
-                elements.voiceTranscript.innerText = text;
+                // Update transcript inside quotes in real-time
+                elements.voiceTranscript.innerText = `"${text}"`;
                 if (event.results[0].isFinal) handleVoiceSend(text);
             };
         }
@@ -271,7 +251,12 @@
 
         function speakText(text) {
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.onend = () => { if(state.voiceMode) recognition.start(); };
+            utterance.onend = () => { 
+                if(state.voiceMode) {
+                    elements.voiceTranscript.innerText = '"Say something..."';
+                    recognition.start(); 
+                }
+            };
             window.speechSynthesis.speak(utterance);
         }
 
