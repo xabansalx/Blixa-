@@ -255,6 +255,7 @@
             voiceTranscript: document.getElementById('voice-transcript')
         };
 
+        // Recognition Engine Setup
         const recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : null;
         if(recognition) { 
             recognition.continuous = false; 
@@ -272,6 +273,7 @@
             setTimeout(() => { elements.loader.classList.add('opacity-0'); setTimeout(() => elements.loader.style.display = 'none', 500); }, 2000);
         };
 
+        // REAL-TIME VOICE LOGIC
         function startVoiceMode() { 
             if (!recognition) return; 
             state.voiceMode = true; 
@@ -306,6 +308,7 @@
             speakText(lastMessage);
         }
 
+        // Voice Output with Indian Accent
         function speakText(text, btnElement = null) {
             window.speechSynthesis.cancel();
             if (state.currentSpeech === text && !state.voiceMode) { 
@@ -314,8 +317,6 @@
                 return; 
             }
             
+            // Text Cleaning
             let cleanText = text
-                .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '') 
-                .replace(/[*_~#`]/g, '') 
-                .replace(/\(.*?\)/g, "").trim();
-        
+                .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFF
